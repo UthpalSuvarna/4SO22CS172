@@ -24,13 +24,47 @@ const requestOptions = {
     redirect: "follow"
 };
 
-const tokenres = await fetch("http://20.244.56.144/evaluation-service/auth", requestOptions)
-    .then((response) => response.text())
-    .then((result) => { return result })
-    .catch((error) => console.error(error));
 
-const token = (JSON.parse(tokenres)).access_token
+const mpp = {
+    'p': "primes",
+    'f': "fibo",
+    'e': "even",
+    'r': "random"
+}
 
-app.listen(3000, () => {
+
+app.get('/numbers/:numberid', async (req, res) => {
+    const tokenres = await fetch("http://20.244.56.144/evaluation-service/auth", requestOptions)
+        .then((response) => response.text())
+        .then((result) => { return result })
+        .catch((error) => console.error(error));
+
+    const token = (JSON.parse(tokenres)).access_token
+    console.log(token)
+    const numberid = req.params.numberid
+    const reqid = mpp[numberid]
+
+
+    const resp = await fetch(`http://20.244.56.144/evaluation-service/${reqid}`,
+        {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            },
+            redirect: "follow"
+        }
+    ).then((response) => response.text())
+        .then((result) => { return result })
+        .catch((error) => console.error(error));
+
+    const numbers = JSON.parse(resp)["numbers"]
+
+    console.log(numbers)
+
+    res.send("Done")
+
+})
+
+app.listen(9876, () => {
     console.log("Running")
 })
