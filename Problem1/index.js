@@ -31,7 +31,42 @@ const mpp = {
     'e': "even",
     'r': "random"
 }
+function calAvg(arr) {
+    let sum = 0;
+    for (let i = 0; i < arr.length; i++) {
+        sum += arr[i];
+    }
+    return sum / arr.length;
+}
 
+function windowService(prev, next) {
+    let psize = prev.length
+    let nsize = next.length ?? 0
+    let n = []
+    let avg = 0;
+    if (psize == 0 || nsize > 10) {
+        n = next.slice(-10)
+        avg = calAvg(n)
+    } else {
+        let a = prev.concat(next)
+        n = a.filter((item, index) => a.indexOf(item) === index);
+        n = n.slice(-10)
+        avg = calAvg(n)
+    }
+
+    const result = {
+        "windowPrevState": prev,
+        "windowCurrState": n,
+        "numbers": next,
+        "avg": avg
+    }
+
+    return result
+}
+
+let windowPrevState = [];
+let result = {};
+const windowSize = 10;
 
 app.get('/numbers/:numberid', async (req, res) => {
     const tokenres = await fetch("http://20.244.56.144/evaluation-service/auth", requestOptions)
@@ -60,8 +95,13 @@ app.get('/numbers/:numberid', async (req, res) => {
     const numbers = JSON.parse(resp)["numbers"]
 
     console.log(numbers)
+    if (numbers) {
+        result = windowService(windowPrevState, numbers);
+    }
 
-    res.send("Done")
+    windowPrevState = result.windowCurrState
+
+    res.send(result)
 
 })
 
